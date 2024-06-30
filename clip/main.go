@@ -4,7 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"os"
+
+	"golang.design/x/clipboard"
 )
 
 var trans = map[rune]rune{
@@ -28,28 +29,34 @@ var trans = map[rune]rune{
 	'З': 'Z', 'Х': 'X', 'Ц': 'C', 'В': 'V', 'Б': 'B', 'Н': 'N', 'М': 'M',
 }
 
-// main is the entry point of the program.
-//
-// It reads input from the standard input, translates it using the `trans` map,
-// and writes the translated output to the standard output.
-//
-// It returns an error if there is any issue during the translation process.
 func main() {
-	err := translit(os.Stdin, os.Stdout, trans)
+	err := clipboard.Init()
 	if err != nil {
 		panic(err)
 	}
+
+	newClipboard := []rune(string(clipboard.Read(clipboard.FmtText)))
+	newClipboard, err = phonetic_translit(newClipboard)
+	if err != nil {
+		panic(err)
+	}
+	clipboard.Write(clipboard.FmtText, []byte(string(newClipboard)))
+
+	// fmt.Println(string(newClipboard))
 }
 
-// transStr transcribes a string using a given map of rune translations.
-//
-// The function takes an input string and a map of rune translations as parameters.
-// It iterates over each rune in the input string and checks if it exists in the
-// translation map. If a translation is found, the corresponding rune is appended
-// to the outputRunes slice. If no translation is found, the original rune is
-// appended to the outputRunes slice.
-//
-// The function returns the transcribed string as a string.
+func phonetic_translit(input []rune) ([]rune, error) {
+	var outputRunes []rune
+	for _, inputChar := range input {
+		if outputChar, ok := trans[inputChar]; ok {
+			outputRunes = append(outputRunes, outputChar)
+		} else {
+			outputRunes = append(outputRunes, inputChar)
+		}
+	}
+	return outputRunes, nil
+}
+
 func transStr(input string, tr map[rune]rune) string {
 	var outputRunes []rune
 	for _, inputChar := range input {
@@ -62,22 +69,13 @@ func transStr(input string, tr map[rune]rune) string {
 	return string(outputRunes)
 }
 
-// translit transcribes text read from r using the translation map trans and writes the transcribed text to w.
-//
-// Parameters:
-//   - r: an io.Reader from which text is read.
-//   - w: an io.Writer to which transcribed text is written.
-//   - trans: a map of rune translations used for transliteration.
-//
-// Returns an error if any.
 func translit(r io.Reader, w io.Writer, trans map[rune]rune) error {
 	scanner := bufio.NewScanner(bufio.NewReader(r))
 	for scanner.Scan() {
-		// newText := transStr(scanner.Text(), trans)
-		// _, err := fmt.Fprintln(w, newText)
-		_, err := fmt.Fprintln(w, transStr(scanner.Text(), trans))
-		if err != nil {
-			return err
+		_, e := fmt.Fprintln(
+			w, transStr(scanner.Text(), trans))
+		if e != nil {
+			return e
 		}
 	}
 	return nil
