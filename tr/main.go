@@ -28,6 +28,8 @@ var trans = map[rune]rune{
 	'З': 'Z', 'Х': 'X', 'Ц': 'C', 'В': 'V', 'Б': 'B', 'Н': 'N', 'М': 'M',
 }
 
+var revision = ""
+
 // main is the entry point of the program.
 //
 // It reads input from the standard input, translates it using the `trans` map,
@@ -72,13 +74,21 @@ func transStr(input string, tr map[rune]rune) string {
 // Returns an error if any.
 func translit(r io.Reader, w io.Writer, trans map[rune]rune) error {
 	scanner := bufio.NewScanner(bufio.NewReader(r))
+	var output []string
 	for scanner.Scan() {
-		// newText := transStr(scanner.Text(), trans)
-		// _, err := fmt.Fprintln(w, newText)
-		_, err := fmt.Fprintln(w, transStr(scanner.Text(), trans))
+		output = append(output, transStr(scanner.Text(), trans))
+	}
+	last := len(output) - 1
+	for i := 0; i < last; i++ {
+		_, err := fmt.Fprintln(w, output[i])
 		if err != nil {
 			return err
 		}
 	}
+	_, err := fmt.Fprint(w, output[last])
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

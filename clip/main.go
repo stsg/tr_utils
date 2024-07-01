@@ -35,26 +35,15 @@ func main() {
 		panic(err)
 	}
 
-	newClipboard := []rune(string(clipboard.Read(clipboard.FmtText)))
-	newClipboard, err = phonetic_translit(newClipboard)
-	if err != nil {
+	b := clipboard.Read(clipboard.FmtText)
+	if b == nil {
 		panic(err)
 	}
-	clipboard.Write(clipboard.FmtText, []byte(string(newClipboard)))
 
-	// fmt.Println(string(newClipboard))
-}
+	c := []byte(transStr(string(b), trans))
 
-func phonetic_translit(input []rune) ([]rune, error) {
-	var outputRunes []rune
-	for _, inputChar := range input {
-		if outputChar, ok := trans[inputChar]; ok {
-			outputRunes = append(outputRunes, outputChar)
-		} else {
-			outputRunes = append(outputRunes, inputChar)
-		}
-	}
-	return outputRunes, nil
+	clipboard.Write(clipboard.FmtText, c)
+	// fmt.Println(string(c))
 }
 
 func transStr(input string, tr map[rune]rune) string {
@@ -71,12 +60,21 @@ func transStr(input string, tr map[rune]rune) string {
 
 func translit(r io.Reader, w io.Writer, trans map[rune]rune) error {
 	scanner := bufio.NewScanner(bufio.NewReader(r))
+	var output []string
 	for scanner.Scan() {
-		_, e := fmt.Fprintln(
-			w, transStr(scanner.Text(), trans))
-		if e != nil {
-			return e
+		output = append(output, transStr(scanner.Text(), trans))
+	}
+	last := len(output) - 1
+	for i := 0; i < last; i++ {
+		_, err := fmt.Fprintln(w, output[i])
+		if err != nil {
+			return err
 		}
 	}
+	_, err := fmt.Fprint(w, output[last])
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
