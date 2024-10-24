@@ -79,6 +79,9 @@ func translit(r io.Reader, w io.Writer, trans map[rune]rune) error {
 		output = append(output, transStr(scanner.Text(), trans))
 	}
 	last := len(output) - 1
+	if last < 0 {
+		return nil
+	}
 	for i := 0; i < last; i++ {
 		_, err := fmt.Fprintln(w, output[i])
 		if err != nil {

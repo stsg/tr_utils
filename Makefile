@@ -11,7 +11,7 @@ build: info
 	@ echo
 	@ echo "Compiling Binary"
 	@ echo
-	go build -ldflags "-X main.revision=$(REV) -s -w" -o bin/tr tr/main.go
+	go build -ldflags "-X main.revision=$(REV) -s -w" -o bin/trl trl/main.go
 
 docker:
 	docker build -t starky/gophkeeper:master .
