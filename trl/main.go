@@ -7,8 +7,8 @@ import (
 	"os"
 )
 
-var trans = map[rune]rune{
-	//cyrillic
+var trans_phonetic_mac = map[rune]rune{
+	// cyrillic
 	'`': 'щ', '-': 'ь', '=': 'ъ',
 	'q': 'я', 'w': 'ш', 'e': 'е', 'r': 'р', 't': 'т', 'y': 'ы', 'u': 'у', 'i': 'и', 'o': 'о', 'p': 'п', '[': 'ю', ']': 'ж', '\\': 'э',
 	'a': 'а', 's': 'с', 'd': 'д', 'f': 'ф', 'g': 'г', 'h': 'ч', 'j': 'й', 'k': 'к', 'l': 'л',
@@ -28,6 +28,27 @@ var trans = map[rune]rune{
 	'З': 'Z', 'Х': 'X', 'Ц': 'C', 'В': 'V', 'Б': 'B', 'Н': 'N', 'М': 'M',
 }
 
+var trans_phonetic_winkeys = map[rune]rune{
+	// cyrillic
+	'`': 'ю', '#': 'ё', '$': 'Ё', '%': 'ъ', '^': 'Ъ', '=': 'ь',
+	'q': 'я', 'w': 'в', 'e': 'е', 'r': 'р', 't': 'т', 'y': 'ы', 'u': 'у', 'i': 'и', 'o': 'о', 'p': 'п', '[': 'ш', ']': 'щ', '\\': 'э',
+	'a': 'а', 's': 'с', 'd': 'д', 'f': 'ф', 'g': 'г', 'h': 'ч', 'j': 'й', 'k': 'к', 'l': 'л',
+	'z': 'з', 'x': 'х', 'c': 'ц', 'v': 'ж', 'b': 'б', 'n': 'н', 'm': 'м',
+	'~': 'Ю', '+': 'Ь',
+	'Q': 'Я', 'W': 'В', 'E': 'Е', 'R': 'Р', 'T': 'Т', 'Y': 'Ы', 'U': 'У', 'I': 'И', 'O': 'О', 'P': 'П', '{': 'Ш', '}': 'Щ', '|': 'Э',
+	'A': 'А', 'S': 'С', 'D': 'Д', 'F': 'Ф', 'G': 'Г', 'H': 'Ч', 'J': 'Й', 'K': 'К', 'L': 'Л',
+	'Z': 'З', 'X': 'Х', 'C': 'Ц', 'V': 'Ж', 'B': 'Б', 'N': 'Н', 'M': 'М',
+	// latin
+	'ю': '`', 'ё': '#', 'Ё': '$', 'ъ': '%', 'Ъ': '^', 'ь': '=',
+	'я': 'q', 'в': 'w', 'е': 'e', 'р': 'r', 'т': 't', 'ы': 'y', 'у': 'u', 'и': 'i', 'о': 'o', 'п': 'p', 'ш': '[', 'щ': ']', 'э': '\\',
+	'а': 'a', 'с': 's', 'д': 'd', 'ф': 'f', 'г': 'g', 'ч': 'h', 'й': 'j', 'к': 'k', 'л': 'l',
+	'з': 'z', 'х': 'x', 'ц': 'c', 'ж': 'v', 'б': 'b', 'н': 'n', 'м': 'm',
+	'Ю': '~', 'Ь': '+',
+	'Я': 'Q', 'В': 'W', 'Е': 'E', 'Р': 'R', 'Т': 'T', 'Ы': 'Y', 'У': 'U', 'И': 'I', 'О': 'O', 'П': 'P', 'Ш': '{', 'Щ': '}', 'Э': '"',
+	'А': 'A', 'С': 'S', 'Д': 'D', 'Ф': 'F', 'Г': 'G', 'Ч': 'H', 'Й': 'J', 'К': 'K', 'Л': 'L',
+	'З': 'Z', 'Х': 'X', 'Ц': 'C', 'Ж': 'V', 'Б': 'B', 'Н': 'N', 'М': 'M',
+}
+
 var revision = ""
 
 // main is the entry point of the program.
@@ -37,7 +58,7 @@ var revision = ""
 //
 // It returns an error if there is any issue during the translation process.
 func main() {
-	err := translit(os.Stdin, os.Stdout, trans)
+	err := translit(os.Stdin, os.Stdout, trans_phonetic_winkeys)
 	if err != nil {
 		panic(err)
 	}
@@ -53,7 +74,7 @@ func main() {
 //
 // The function returns the transcribed string as a string.
 func transStr(input string, tr map[rune]rune) string {
-	var outputRunes []rune
+	outputRunes := make([]rune, 0, len(input))
 	for _, inputChar := range input {
 		if outputChar, ok := tr[inputChar]; ok {
 			outputRunes = append(outputRunes, outputChar)
@@ -73,7 +94,7 @@ func transStr(input string, tr map[rune]rune) string {
 //
 // Returns an error if any.
 func translit(r io.Reader, w io.Writer, trans map[rune]rune) error {
-	scanner := bufio.NewScanner(bufio.NewReader(r))
+	scanner := bufio.NewScanner(r)
 	var output []string
 	for scanner.Scan() {
 		output = append(output, transStr(scanner.Text(), trans))
